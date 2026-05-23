@@ -13,11 +13,11 @@ os.makedirs(UPLOAD_DIR,exist_ok=True)
 @router.post("/products")
 async def add_products(
     name:str=Form(...),
-    price:int=Form(0),
-    stock:int=Form(0),
+    price:int=Form(...),
+    stock:int=Form(...),
     description:str=Form(...),
     photo:UploadFile=File(...),
-    category:str=Form(...)
+    category_id:int=Form(...)
 ):
     extention=photo.filename.split(".")[-1]
     photo_name=f"{uuid.uuid4()}.{extention}"
@@ -47,10 +47,10 @@ async def add_products(
     
     cursor.execute(
         """
-        INSERT INTO products (name, price, stock, description, photo_url, category)
+        INSERT INTO products (name, price, stock, description, photo_url, category_id)
         VALUES (%s, %s, %s, %s, %s,%s) RETURNING *
         """,
-        (name, price, stock, description, photo_path_name, category)
+        (name, price, stock, description, photo_path_name, category_id)
     )
 
     products_id=cursor.fetchone()[0]
@@ -69,7 +69,7 @@ async def add_products(
         "stock":stock,
         "description":description,
         "photo_url":f"http://localhost:8000/{photo_path_name}",
-        "category":category
+        "category_id":category_id
     }
 
 
@@ -88,6 +88,7 @@ def get_products():
 
     products=cursor.fetchall()
     if not products:
+        connection.rollback()
         raise HTTPException(status_code=404, detail="No product have been added yet!!")
     cursor.close()
     connection.close()
@@ -116,3 +117,97 @@ def get_product(product_id:int):
 
     return product
 
+@router.get("/search/products")
+def search_produits(q:str):
+    connection = get_connection()
+    cursor=connection.cursor()
+    cursor.execute(
+        """
+        SELECT * FROM products WHERE name ILIKE %s
+        """,
+        (f"%{q}%",)
+    )
+    result=cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return result
+
+
+
+@router.put("/products/{product_id}")
+def edit_product(
+    product_id:int,
+    name:str=Form(None),
+    price:int=Form(None),
+    stock:int=Form(None),
+    description:str=Form(None),
+    photo:UploadFile=File(None),
+    category_id:int=Form(None)
+):
+    
+    connection=get_connection()
+    cursor=connection.cursor()
+    
+    cursor.execute(
+        """
+        SELECT * FROM products WHERE product_id=%s
+        """,
+        (product_id,)
+    )
+    
+    if not cursor.fetchone():
+        cursor.close()
+        connection.close()
+        raise HTTPException(status_code=404, detail="Product not found!!")
+        
+    cursor.execute(
+        """
+        UPDATE products SET category_id=%s, name=%s, price=%s, stock=%s, description=%s, photo_url=%s
+          WHERE  product_id=%s RETURNING *
+        """,
+        (category_id, name, price, stock, description, photo, product_id,)
+    )
+    product=cursor.fetchone()
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return {"Message":"Product modified successfully!!!"}, product
+
+
+
+
+@router.delete("/products/{product_id}")
+def del_product(
+    product_id:int#=Form(...)
+):
+    connection=get_connection()
+    cursor=connection.cursor()
+    cursor.execute(
+        """
+        SELECT * FROM products WHERE product_id=%s 
+        """,
+        (product_id,)
+    )
+    if not cursor.fetchone():
+        cursor.close()
+        connection.close()
+        raise HTTPException(status_code=404,detail= "product not found !!")
+    
+    cursor.execute(
+        """
+        DELETE FROM products WHERE product_id=%s
+        """,
+        (product_id,)
+    )
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return {"message":"Product deleted successfully !!"}
+
+
+
+
+   

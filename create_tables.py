@@ -7,7 +7,13 @@ def create_table():
     try:
         cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS clients
+            CREATE SCHEMA IF NOT EXISTS public
+            """
+        )
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS users
             (                                                                              
             id SERIAL PRIMARY KEY,
             name VARCHAR(100),
@@ -22,7 +28,7 @@ def create_table():
             CREATE TABLE IF NOT EXISTS categories
             (
             category_id SERIAL PRIMARY KEY,
-            category_name VARCHAR(50)
+            category_name VARCHAR(50) UNIQUE
             )
             """
         )
@@ -49,9 +55,9 @@ def create_table():
             """
             CREATE TABLE IF NOT EXISTS favorites
             (
-            client_id INT,
+            user_id INT,
             product_id INT,
-            FOREIGN KEY (client_id) REFERENCES clients(id),
+            FOREIGN KEY (user_id) REFERENCES users(id),
             FOREIGN KEY (product_id) REFERENCES products(product_id) 
             ) 
             """
@@ -62,10 +68,10 @@ def create_table():
             CREATE TABLE IF NOT EXISTS orders
             (
             order_id SERIAL PRIMARY KEY,
-            client_id INT,
+            user_id INT,
             date DATE,
             status VARCHAR,
-            FOREIGN KEY (client_id) REFERENCES clients(id)
+            FOREIGN KEY (user_id) REFERENCES users(id)
             )
             """
         )
@@ -86,9 +92,9 @@ def create_table():
         )
         connection.commit()
         print('Tables created successfully!!')
-    except Exception :
+    except Exception as e :
         connection.rollback()
-        print("error occured during creating table !!")
+        print(f"error occured during creating table {e} !!")
 
     finally:
         cursor.close()
