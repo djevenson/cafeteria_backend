@@ -136,7 +136,7 @@ def search_produits(q:str):
 
 
 @router.put("/products/{product_id}")
-def edit_product(
+async def edit_product(
     product_id:int,
     name:str=Form(None),
     price:int=Form(None),
@@ -145,29 +145,56 @@ def edit_product(
     photo:UploadFile=File(None),
     category_id:int=Form(None)
 ):
-    
     connection=get_connection()
     cursor=connection.cursor()
-    
+
     cursor.execute(
         """
         SELECT * FROM products WHERE product_id=%s
         """,
         (product_id,)
     )
-    
-    if not cursor.fetchone():
+
+    existing = cursor.fetchone()  # ← stocker ici
+
+    if not existing:
         cursor.close()
         connection.close()
         raise HTTPException(status_code=404, detail="Product not found!!")
-        
+
+    # Fusion ancienne/nouvelle valeur
+    new_category_id = category_id if category_id is not None else existing[1]
+    new_name        = name        if name        is not None else existing[2]
+    new_price       = price       if price       is not None else existing[3]
+    new_stock       = stock       if stock       is not None else existing[4]
+    new_description = description if description is not None else existing[5]
+    new_photo_url   = existing[6]
+
+    # Nouvelle photo seulement si envoyée
+    if photo and photo.filename != "":
+        new_photo_url = f"uploads/{photo.filename}"
+        with open(new_photo_url, "wb") as f:
+            f.write(await photo.read())
+
+    # Vérification nom unique seulement si changé
+    if new_name != existing[2]:
+        cursor.execute(
+            "SELECT 1 FROM products WHERE name=%s AND product_id != %s",
+            (new_name, product_id)
+        )
+        if cursor.fetchone():
+            cursor.close()
+            connection.close()
+            raise HTTPException(status_code=400, detail="Product name already exists!!")
+
     cursor.execute(
         """
         UPDATE products SET category_id=%s, name=%s, price=%s, stock=%s, description=%s, photo_url=%s
-          WHERE  product_id=%s RETURNING *
+        WHERE product_id=%s RETURNING *
         """,
-        (category_id, name, price, stock, description, photo, product_id,)
+        (new_category_id, new_name, new_price, new_stock, new_description, new_photo_url, product_id,)
     )
+
     product=cursor.fetchone()
     connection.commit()
     cursor.close()
