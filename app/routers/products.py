@@ -21,8 +21,8 @@ async def add_products(
 ):
     ext=photo.filename.rsplit(".",1)[-1]
     photo_name=f"{uuid.uuid4()}.{ext}"
-    photo_path=os.path.join(UPLOAD_DIR,photo_name)
-    photo_path_name=photo_path.replace("\\","/")
+    old_photo_url=os.path.join(UPLOAD_DIR,photo_name)
+    old_photo_url_name=old_photo_url.replace("\\","/")
 
     connection=get_connection()
     cursor=connection.cursor()
@@ -50,7 +50,7 @@ async def add_products(
         INSERT INTO products (name, price, stock, description, photo_url, category_id)
         VALUES (%s, %s, %s, %s, %s, %s) RETURNING *
         """,
-        (name, price, stock, description, photo_path_name, category_id)
+        (name, price, stock, description, old_photo_url_name, category_id)
     )
 
     products_id=cursor.fetchone()[0]
@@ -58,7 +58,7 @@ async def add_products(
     cursor.close()
     connection.close()
 
-    with open (photo_path_name,"wb")as f:
+    with open (old_photo_url_name,"wb")as f:
         f.write(await photo.read())
 
     return {
@@ -68,7 +68,7 @@ async def add_products(
         "price":price,
         "stock":stock,
         "description":description,
-        "photo_url":f"{photo_path_name}",
+        "photo_url":f"{old_photo_url_name}",
         "category_id":category_id
     }
 
@@ -168,13 +168,18 @@ async def edit_product(
     new_price       = price       if price       is not None else existing[3]
     new_stock       = stock       if stock       is not None else existing[4]
     new_description = description if description is not None else existing[5]
-    new_photo_url   = existing[6]
+    old_photo_url   = existing[6]
 
     # Nouvelle photo seulement si envoyée
     if photo and photo.filename != "":
-        new_photo_url = f"uploads/{photo.filename}"
+        ext=photo.filename.rsplit(".",1)[-1]
+        new_photo_name=f"{uuid.uuid4()}.{ext}"
+        new_photo_url = f"uploads/{new_photo_name}"
         with open(new_photo_url, "wb") as f:
             f.write(await photo.read())
+        if old_photo_url and os.path.exists(old_photo_url):
+            os.remove(old_photo_url)
+
 
     # Vérification nom unique seulement si changé
     if new_name != existing[2]:
@@ -223,7 +228,7 @@ def del_product(
         connection.close()
         raise HTTPException(status_code=404,detail= "product not found !!")
     
-    photo_path=product[0]
+    old_photo_url=product[0]
 
     cursor.execute(
         """
@@ -235,8 +240,8 @@ def del_product(
     cursor.close()
     connection.close()
 
-    if photo_path and os.path.exists(photo_path):
-        os.remove(photo_path)
+    if old_photo_url and os.path.exists(old_photo_url):
+        os.remove(old_photo_url)
 
 
 

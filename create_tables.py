@@ -69,8 +69,8 @@ def create_table():
             (
             order_id SERIAL PRIMARY KEY,
             user_id INT,
-            date DATE,
-            status VARCHAR,
+            date DATE DEFAULT CURRENT_DATE,
+            status VARCHAR DEFAULT 'Pending',
             FOREIGN KEY (user_id) REFERENCES users(id)
             )
             """
