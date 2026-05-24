@@ -19,8 +19,8 @@ async def add_products(
     photo:UploadFile=File(...),
     category_id:int=Form(...)
 ):
-    extention=photo.filename.split(".")[-1]
-    photo_name=f"{uuid.uuid4()}.{extention}"
+    ext=photo.filename.rsplit(".",1)[-1]
+    photo_name=f"{uuid.uuid4()}.{ext}"
     photo_path=os.path.join(UPLOAD_DIR,photo_name)
     photo_path_name=photo_path.replace("\\","/")
 
@@ -48,7 +48,7 @@ async def add_products(
     cursor.execute(
         """
         INSERT INTO products (name, price, stock, description, photo_url, category_id)
-        VALUES (%s, %s, %s, %s, %s,%s) RETURNING *
+        VALUES (%s, %s, %s, %s, %s, %s) RETURNING *
         """,
         (name, price, stock, description, photo_path_name, category_id)
     )
@@ -68,7 +68,7 @@ async def add_products(
         "price":price,
         "stock":stock,
         "description":description,
-        "photo_url":f"http://localhost:8000/{photo_path_name}",
+        "photo_url":f"{photo_path_name}",
         "category_id":category_id
     }
 
@@ -186,15 +186,18 @@ def del_product(
     cursor=connection.cursor()
     cursor.execute(
         """
-        SELECT * FROM products WHERE product_id=%s 
+        SELECT photo_url FROM products WHERE product_id=%s 
         """,
         (product_id,)
     )
-    if not cursor.fetchone():
+    product=cursor.fetchone()
+    if not product :
         cursor.close()
         connection.close()
         raise HTTPException(status_code=404,detail= "product not found !!")
     
+    photo_path=product[0]
+
     cursor.execute(
         """
         DELETE FROM products WHERE product_id=%s
@@ -204,6 +207,11 @@ def del_product(
     connection.commit()
     cursor.close()
     connection.close()
+
+    if photo_path and os.path.exists(photo_path):
+        os.remove(photo_path)
+
+
 
     return {"message":"Product deleted successfully !!"}
 

@@ -18,7 +18,7 @@ def create_table():
             id SERIAL PRIMARY KEY,
             name VARCHAR(100),
             email VARCHAR(100) UNIQUE,
-            role VARCHAR(25)
+            role VARCHAR(25) DEFAULT 'user'
             )
             """
         )
@@ -45,7 +45,7 @@ def create_table():
             stock INT DEFAULT 0,
             description VARCHAR,
             photo_url TEXT,
-            datetime DATE,
+            datetime DATE DEFAULT CURRENT_DATE,
             FOREIGN KEY (category_id) REFERENCES categories(category_id)
             )
             """

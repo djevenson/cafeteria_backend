@@ -41,7 +41,6 @@ def add_user(
 
     user=cursor.fetchone()
     user_id=user[0]
-    account=user[3]
     
     connection.commit()
     cursor.close()
@@ -50,8 +49,7 @@ def add_user(
     return {
         "user_id":user_id,
         "name":name,
-        "email":email,
-        "account":account
+        "email":email
     }
 
 
@@ -90,37 +88,3 @@ def  get_users(user_id:int):
     connection.close()
 
     return user
-
-
-@router.put("/users/{user_id}")
-def topup_user(
-    user_id:int,
-    amount:int=Form(0)     
-):
-    connection=get_connection()
-    cursor=connection.cursor()
-    
-    cursor.execute(
-        """
-        SELECT * FROM users WHERE id=%s
-        """,
-        (user_id,)
-    )
-    exist=cursor.fetchone()
-    if not exist:
-        cursor.close()
-        connection.close()
-        raise HTTPException(status_code=404, detail="User not found!!")
-        
-    cursor.execute(
-        """
-        UPDATE users SET account=account+%s WHERE id=%s RETURNING *
-        """,
-        (amount,user_id,)
-    )
-    user=cursor.fetchone()
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-    return {"Message":"Account topup successfully!!!"}, user
