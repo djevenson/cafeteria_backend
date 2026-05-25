@@ -41,7 +41,7 @@ def create_table():
             product_id SERIAL PRIMARY KEY,
             category_id INT,
             name VARCHAR(100) UNIQUE,
-            price INT DEFAULT 0,
+            price FLOAT DEFAULT 0,
             stock INT DEFAULT 0,
             description VARCHAR,
             photo_url TEXT,
@@ -62,6 +62,32 @@ def create_table():
             ) 
             """
         )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS carts
+            (
+            cart_id SERIAL PRIMARY KEY,
+            user_id INT,
+            create_date DATE DEFAULT CURRENT_DATE,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+            """
+        )
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS cart_items 
+            (
+            cart_item_id PRIMARY KEY,
+            cart_id,
+            product_id,
+            product_price FLOAT,
+            FOREIGN KEY (cart_id) REFERENCES carts(cart_id)
+            FOREIGN KEY (product_id) REFERENCES products(product_id)
+            )
+            """
+        )
+
 
         cursor.execute(
             """
@@ -90,6 +116,7 @@ def create_table():
             (
             order_id SERIAL PRIMARY KEY,
             user_id INT,
+            tot_price FLOAT,
             date DATE DEFAULT CURRENT_DATE,
             status VARCHAR DEFAULT 'Pending',
             FOREIGN KEY (user_id) REFERENCES users(id)
@@ -104,7 +131,7 @@ def create_table():
             order_id INT,
             product_id INT,
             quantity INT,
-            price INT,
+            price FLOAT,
             delay DATE,
             FOREIGN KEY (order_id) REFERENCES orders(order_id),
             FOREIGN KEY (product_id) REFERENCES products(product_id)
