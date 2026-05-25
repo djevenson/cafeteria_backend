@@ -78,11 +78,13 @@ def create_table():
             """
             CREATE TABLE IF NOT EXISTS cart_items 
             (
-            cart_item_id PRIMARY KEY,
-            cart_id,
-            product_id,
+            cart_item_id SERIAL PRIMARY KEY,
+            cart_id INT,
+            product_id INT,
             product_price FLOAT,
-            FOREIGN KEY (cart_id) REFERENCES carts(cart_id)
+            quantity INT,
+            total_price FLOAT,
+            FOREIGN KEY (cart_id) REFERENCES carts(cart_id),
             FOREIGN KEY (product_id) REFERENCES products(product_id)
             )
             """
@@ -102,10 +104,10 @@ def create_table():
         cursor.execute(
             """
             INSERT INTO status (status_name) VALUES
-            ('Waiting')
-            ('Pending')
-            ('Done')
-            ('Canceled')
+            ('Waiting'),
+            ('Pending'),
+            ( 'Done'),
+            ('Canceled') 
             ON CONFLICT (status_name) DO NOTHING;
             """
         )
@@ -116,10 +118,10 @@ def create_table():
             (
             order_id SERIAL PRIMARY KEY,
             user_id INT,
-            tot_price FLOAT,
             date DATE DEFAULT CURRENT_DATE,
-            status VARCHAR DEFAULT 'Pending',
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            status_id INT DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (status_id) REFERENCES status(status_id)
             )
             """
         )
