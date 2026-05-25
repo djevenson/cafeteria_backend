@@ -25,8 +25,39 @@ def place_order(user_id:int=Form(...)):
         "order_id":order[0],
         "user_id":order[1],
         "date":order[2],
-        "statut":order[3]
+        "statut":order[3],
     }
+
+@router.put("orders/{order_id}")
+def valide_order(order_id:int,):
+    connection=get_connection()
+    cursor=connection.cursor()
+    cursor.execute(
+        """
+        SELECT * FROM carts WHERE order_id=%s
+        """,
+        (order_id,)
+    )
+    cart_item=cursor.fetchall()
+    cursor.execute(
+        """
+        SELECT total_price FROM carts WHERE order_id=%s
+        """,
+        (order_id,)
+    )
+    total_price=cursor.fetchall()
+    total_price=sum(total_price)
+    for item in cart_item:
+        cursor.execute(
+            """
+            INSERT INTO order_products ()
+            """
+        )
+
+
+
+
+
 
 @router.get("/orders")
 def show_orders():

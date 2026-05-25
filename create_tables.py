@@ -41,7 +41,7 @@ def create_table():
             product_id SERIAL PRIMARY KEY,
             category_id INT,
             name VARCHAR(100) UNIQUE,
-            price FLOAT DEFAULT 0,
+            price INT DEFAULT 0,
             stock INT DEFAULT 0,
             description VARCHAR,
             photo_url TEXT,
@@ -62,55 +62,7 @@ def create_table():
             ) 
             """
         )
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS carts
-            (
-            cart_id SERIAL PRIMARY KEY,
-            user_id INT,
-            create_date DATE DEFAULT CURRENT_DATE,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-            )
-            """
-        )
-
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS cart_items 
-            (
-            cart_item_id SERIAL PRIMARY KEY,
-            cart_id INT,
-            product_id INT,
-            product_price FLOAT,
-            quantity INT,
-            total_price FLOAT,
-            FOREIGN KEY (cart_id) REFERENCES carts(cart_id),
-            FOREIGN KEY (product_id) REFERENCES products(product_id)
-            )
-            """
-        )
-
-
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS status
-            (
-            status_id SERIAL PRIMARY KEY,
-            status_name VARCHAR(100) UNIQUE
-            )
-            """
-        )
-
-        cursor.execute(
-            """
-            INSERT INTO status (status_name) VALUES
-            ('Waiting'),
-            ('Pending'),
-            ( 'Done'),
-            ('Canceled') 
-            ON CONFLICT (status_name) DO NOTHING;
-            """
-        )
+        
 
         cursor.execute(
             """
@@ -118,13 +70,26 @@ def create_table():
             (
             order_id SERIAL PRIMARY KEY,
             user_id INT,
+            total_price INT DEFAULT 0,
             date DATE DEFAULT CURRENT_DATE,
-            status_id INT DEFAULT 1,
-            FOREIGN KEY (user_id) REFERENCES users(id),
-            FOREIGN KEY (status_id) REFERENCES status(status_id)
+            status INT DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES users(id)
             )
             """
         )
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS carts
+            (
+            product_id SERIAL PRIMARY KEY,
+            order_id SERIAL PRIMARY KEY,
+            create_date DATE DEFAULT CURRENT_DATE,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+            """
+        )
+
 
         cursor.execute(
             """
@@ -133,7 +98,7 @@ def create_table():
             order_id INT,
             product_id INT,
             quantity INT,
-            price FLOAT,
+            price INT,
             delay DATE,
             FOREIGN KEY (order_id) REFERENCES orders(order_id),
             FOREIGN KEY (product_id) REFERENCES products(product_id)

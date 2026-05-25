@@ -28,7 +28,7 @@ def order_products(
     connection.close()
 
     return{
-        "message":"Tout bg sou control",
+        "message":"Tout bgy sou control",
         "order_id": order_products[0],
         "product_id":order_products[1],
         "quantity":order_products[2],
