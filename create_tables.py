@@ -84,8 +84,11 @@ def create_table():
             (
             product_id SERIAL PRIMARY KEY,
             order_id SERIAL PRIMARY KEY,
-            create_date DATE DEFAULT CURRENT_DATE,
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            date_time DATE DEFAULT CURRENT_DATE,
+            quantity INT,
+            unit_price INT,
+            total_price INT,
+            FOREIGN KEY (order_id) REFERENCES order(id)
             )
             """
         )
@@ -95,13 +98,13 @@ def create_table():
             """
             CREATE TABLE IF NOT EXISTS order_products
             (
-            order_id INT,
-            product_id INT,
+            product_id SERIAL PRIMARY KEY,
+            order_id SERIAL PRIMARY KEY,
+            date_time DATE DEFAULT CURRENT_DATE,
             quantity INT,
-            price INT,
-            delay DATE,
-            FOREIGN KEY (order_id) REFERENCES orders(order_id),
-            FOREIGN KEY (product_id) REFERENCES products(product_id)
+            total_price INT,
+            unit_price INT,
+            FOREIGN KEY (order_id) REFERENCES order(id)
             )
             """
         )
