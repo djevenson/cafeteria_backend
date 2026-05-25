@@ -65,6 +65,27 @@ def create_table():
 
         cursor.execute(
             """
+            CREATE TABLE IF NOT EXISTS status
+            (
+            status_id SERIAL PRIMARY KEY,
+            status_name VARCHAR(100) UNIQUE
+            )
+            """
+        )
+
+        cursor.execute(
+            """
+            INSERT INTO status (status_name) VALUES
+            ('Waiting')
+            ('Pending')
+            ('Done')
+            ('Canceled')
+            ON CONFLICT (status_name) DO NOTHING;
+            """
+        )
+
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS orders
             (
             order_id SERIAL PRIMARY KEY,
