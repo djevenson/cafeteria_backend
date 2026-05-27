@@ -32,35 +32,15 @@ def place_order(user_id:int=Form(...)):
 def valide_order(order_id:int,):
     connection=get_connection()
     cursor=connection.cursor()
-    cursor.execute(
-        """
-        SELECT * FROM carts WHERE order_id=%s
-        """,
-        (order_id,)
-    )
-    cart_item=cursor.fetchall()
-    cursor.execute(
-        """
-        SELECT total_price FROM carts WHERE order_id=%s
-        """,
-        (order_id,)
-    )
-    total_price=cursor.fetchall()
-    total_price=sum(total_price)
-    for item in cart_item:
-        cursor.execute(
-            """
-            INSERT INTO order_products ()
-            """
-        )
     
-    #cursor.execute(
-        #"""
-        #UPDATE orders
-        #SET status = %s
-        #WHERE id = %s
-        #""",
-   # )
+    
+    cursor.execute(
+        """
+        UPDATE orders
+        SET status = %s
+        WHERE id = %s
+        """,
+    )
 
 
 
