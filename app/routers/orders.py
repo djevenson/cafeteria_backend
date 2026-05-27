@@ -53,6 +53,14 @@ def valide_order(order_id:int,):
             INSERT INTO order_products ()
             """
         )
+    
+    #cursor.execute(
+        #"""
+        #UPDATE orders
+        #SET status = %s
+        #WHERE id = %s
+        #""",
+   # )
 
 
 

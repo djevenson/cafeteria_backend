@@ -43,7 +43,7 @@ def modify_carts(quantity:int,):
 
     return {
         "message":"quantity has been modified",
-        "quantity=quantity"
+        "quantity":"quantity"
 
     }
 
@@ -95,5 +95,5 @@ def show_cart(cart_id:int,):
     cursor.close()
     connection.cose()
 
-    return {"message":"carts ready for your products"}
+    return {"message":"carts deleted"}
 

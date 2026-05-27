@@ -16,7 +16,8 @@ def create_table():
             CREATE TABLE IF NOT EXISTS users
             (                                                                              
             id SERIAL PRIMARY KEY,
-            name VARCHAR(100),
+            last name VARCHAR(100),
+            first name VARCHAR(100),
             email VARCHAR(100) UNIQUE,
             role VARCHAR(25) DEFAULT 'user'
             )
@@ -44,8 +45,9 @@ def create_table():
             price INT DEFAULT 0,
             stock INT DEFAULT 0,
             description VARCHAR,
+            status INT,
             photo_url TEXT,
-            datetime DATE DEFAULT CURRENT_DATE,
+            datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP, #DONNE HEURE ET DATE
             FOREIGN KEY (category_id) REFERENCES categories(category_id)
             )
             """
@@ -55,6 +57,7 @@ def create_table():
             """
             CREATE TABLE IF NOT EXISTS favorites
             (
+            favorite_id SERIAL PRIMARY KEY,
             user_id INT,
             product_id INT,
             FOREIGN KEY (user_id) REFERENCES users(id),
@@ -71,7 +74,8 @@ def create_table():
             order_id SERIAL PRIMARY KEY,
             user_id INT,
             total_price INT DEFAULT 0,
-            date DATE DEFAULT CURRENT_DATE,
+            creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expiration TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '3 hours',
             status INT DEFAULT 1,
             FOREIGN KEY (user_id) REFERENCES users(id)
             )
@@ -82,13 +86,24 @@ def create_table():
             """
             CREATE TABLE IF NOT EXISTS carts
             (
-            product_id SERIAL PRIMARY KEY,
-            order_id SERIAL PRIMARY KEY,
-            date_time DATE DEFAULT CURRENT_DATE,
+            cart_id SERIAL PRIMARY KEY,
+            user_id INT,
+            creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expiration TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '24 hours',
+            FOREIGN KEY (user_id) REFERENCES user(id)
+            )
+            """
+        )
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS carts_items
+            (
+            cart_id SERIAL PRIMARY KEY,
+            product_id INT,
             quantity INT,
-            unit_price INT,
-            total_price INT,
-            FOREIGN KEY (order_id) REFERENCES order(id)
+            price INT,
+            FOREIGN KEY (cart_id, product_id ) REFERENCES cart(id), product(id)
             )
             """
         )
@@ -99,8 +114,7 @@ def create_table():
             CREATE TABLE IF NOT EXISTS order_products
             (
             product_id SERIAL PRIMARY KEY,
-            order_id SERIAL PRIMARY KEY,
-            date_time DATE DEFAULT CURRENT_DATE,
+            order_id INT,
             quantity INT,
             total_price INT,
             unit_price INT,
@@ -108,6 +122,22 @@ def create_table():
             )
             """
         )
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS transaction
+            (
+            transaction_id SERIAL PRIMARY KEY,
+            user_id INT,
+            type VARCHAR CHECK(type IN ('deposit', 'withdrawal')),
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            quantity INT,
+            status VARCHAR
+            FOREIGN KEY (user_id) REFERENCES user(id)
+            )
+            """
+        )
+
         connection.commit()
         print('Tables created successfully!!')
     except Exception as e :
