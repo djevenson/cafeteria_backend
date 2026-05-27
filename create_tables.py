@@ -16,8 +16,8 @@ def create_table():
             CREATE TABLE IF NOT EXISTS users
             (                                                                              
             id SERIAL PRIMARY KEY,
-            last_name VARCHAR(100),
             first_name VARCHAR(100),
+            last_name VARCHAR(100),
             email VARCHAR(100) UNIQUE,
             role VARCHAR(25) DEFAULT 'client'
             )
@@ -29,7 +29,7 @@ def create_table():
             CREATE TABLE IF NOT EXISTS categories
             (
             category_id SERIAL PRIMARY KEY,
-            category_name VARCHAR CHECK(type IN ('Food', 'Drink', 'Dessert')),
+            category_name VARCHAR CHECK(type IN ('Food', 'Drink', 'Dessert'))
             )
             """
         )
