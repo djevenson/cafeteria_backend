@@ -1,94 +1,37 @@
+from fastapi import APIRouter, Form, HTTPException
 from app.database import get_connection
-from fastapi import HTTPException, APIRouter, Form
-
 
 router=APIRouter()
 
 @router.post("/categories")
-def add_category(
-    category_name:str=Form(...)
-):
-    check=category_name.strip().upper()
-    connection=get_connection()
-    cursor=connection.cursor()
-    try:
-        cursor.execute(
-            """
-            SELECT 1 FROM categories WHERE category_name=%s LIMIT 1
-            """,
-            (check,)
-        )
-        
-        if cursor.fetchone():
-            connection.rollback()
-            raise HTTPException(status_code=409, detail="category name already exist !!")
-    finally:
-        cursor.close()
-        connection.close()
-
+def set_categories(cat_name:str):
     connection=get_connection()
     cursor=connection.cursor()
     cursor.execute(
         """
-        INSERT INTO categories (category_name)
-        VALUES (%s) RETURNING *
+        INSERT INTO categories(category_name) VALUES (%s) RETURNING *
         """,
-        (check,)
+        (cat_name,)
     )
-    category = cursor.fetchone()
+    categorie=cursor.fetchone()
     connection.commit()
     cursor.close()
     connection.close()
+    return {"message":"categorie added successfully!!", "categorie":f"{categorie}"}
 
-    return {"message":"category added successfully !!"}, category
 
-
-@router.delete("/categories/{category_id}")
-def del_category(
-    category_id:int#=Form(...)
-):
+@router.get("/categories")
+def set_categories(cat_id:str):
     connection=get_connection()
     cursor=connection.cursor()
     cursor.execute(
         """
         SELECT * FROM categories WHERE category_id=%s 
         """,
-        (category_id,)
+        (cat_id,)
     )
-    if not cursor.fetchone():
-        cursor.close()
-        connection.close()
-        raise HTTPException(status_code=404,detail= "category not found !!")
-    
-    cursor.execute(
-        """
-        DELETE FROM categories WHERE category_id=%s
-        """,
-        (category_id,)
-    )
-    connection.commit()
+    categorie=cursor.fetchone()
     cursor.close()
     connection.close()
 
-    return {"message":"Category deleted successfully !!"}
-
-
-
-@router.get("/categories")
-def show_categories():
-    connection=get_connection()
-    cursor=connection.cursor()
-    cursor.execute(
-        """
-        SELECT * FROM categories 
-        """
-    )
-    categories=cursor.fetchall()
-    cursor.close()
-    connection.close()
-
-    return {
-        "Category":categories
-    }
-
-   
+    return categorie

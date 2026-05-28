@@ -1,3 +1,4 @@
+
 import os
 import uuid
 from app.database import get_connection
@@ -37,6 +38,8 @@ async def add_products(
         )
         
         if cursor.fetchone():
+            cursor.close()
+            connection.close()
             raise HTTPException(status_code=404, detail="Product name already exist !!")
     finally:
         cursor.close()
@@ -96,6 +99,28 @@ def get_products():
     return products
 
 
+@router.get("/products/{product_id}/stock")
+def  get_stock(product_id):
+    connection=get_connection()
+    cursor=connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT * FROM stock WHERE product_id = %s
+        """,
+        (product_id,)
+    )
+    product =cursor.fetchone()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found!!")
+    cursor.close()
+    connection.close()
+
+    return {
+        "message":f"There are {product[0]} units left in this product"
+    } 
+
+
 #====ENDPOINT TO GET ON PRODUCT WITHM ID======#
 @router.get("/products/{product_id}")
 def get_product(product_id:int):
@@ -104,18 +129,31 @@ def get_product(product_id:int):
 
     cursor.execute(
         """
-        SELECT * FROM products WHERE id=%s
+        SELECT * FROM products WHERE product_id=%s
         """,
         (product_id,)
     )
 
-    product=cursor.fetchone()
-    if not product:
+    products=cursor.fetchone()
+    if not products:
         raise HTTPException(status_code=404, detail="Product not found!!")
     cursor.close()
     connection.close()
 
-    return product
+    return {"message":"product details",
+            "details":[
+                {
+                "product_id": product[0],
+                "category_id": product[1],
+                "name": product[2],
+                "price": product[3],
+                "stock": product[4],
+                "description": product[5],
+                "photo_url": product[6]
+            } for product in products
+            ]
+    }
+
 
 @router.get("/search/products")
 def search_produits(q:str):
@@ -127,11 +165,66 @@ def search_produits(q:str):
         """,
         (f"%{q}%",)
     )
-    result=cursor.fetchall()
+    products=cursor.fetchall()
     cursor.close()
     connection.close()
 
-    return result
+    return {
+        "message":f"Search results for '{q}'",
+        "results":[
+            {
+                "product_id": product[0],
+                "category_id": product[1],
+                "name": product[2],
+                "price": product[3],
+                "stock": product[4],
+                "description": product[5],
+                "photo_url": product[6]
+            } for product in products
+        ]
+    }
+
+
+
+@router.put("/product /{product_id}/add_stock")
+def add_stock (product_id:int, quantity:int=Form(...)):
+    connection=get_connection()
+    cursor=connection.cursor()
+    cursor.execute(
+        """
+        UPDATE products
+        SET stock = stock + %s
+        WHERE product_id = %s
+        """,
+        (quantity, product_id,)
+    )
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return {
+        "message":"stock added successfully"
+    }
+
+@router.put("/product /{product_id}/substract_stock")
+def substract_stock (product_id:int, quantity:int=Form(...)):
+    connection=get_connection()
+    cursor=connection.cursor()
+    cursor.execute(
+        """
+        UPDATE products
+        SET stock = %s
+        WHERE product_id = %s
+        """,
+        (quantity, product_id,)
+    )
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return {
+        "message":"Stock modified successfully"
+    }
 
 
 
@@ -212,7 +305,7 @@ async def edit_product(
 
 @router.delete("/products/{product_id}")
 def del_product(
-    product_id:int#=Form(...)
+    product_id:int
 ):
     connection=get_connection()
     cursor=connection.cursor()
