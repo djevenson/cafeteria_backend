@@ -30,7 +30,7 @@ def create_table():
             CREATE TABLE IF NOT EXISTS categories
             (
             category_id SERIAL PRIMARY KEY,
-            category_name VARCHAR CHECK(category_name IN ('Food', 'Drink', 'Dessert'))
+            category_name VARCHAR CHECK(category_name IN ('FOOD', 'DRINK', 'DESSERT'))
             )
             """
         )

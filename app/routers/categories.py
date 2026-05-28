@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Form
+from fastapi import APIRouter, Form
 from app.database import get_connection 
 
 router = APIRouter()
@@ -7,6 +7,7 @@ router = APIRouter()
 def category(
     category_name:str=Form(...)
 ):
+    category_name = category_name.upper()
     
     connection = get_connection()
     cursor = connection.cursor()
