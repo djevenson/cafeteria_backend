@@ -19,6 +19,7 @@ def create_table():
             last_name VARCHAR(100),
             first_name VARCHAR(100),
             email VARCHAR(100) UNIQUE,
+            balance INT,
             role VARCHAR(25) DEFAULT 'client'
             )
             """
@@ -29,7 +30,7 @@ def create_table():
             CREATE TABLE IF NOT EXISTS categories
             (
             category_id SERIAL PRIMARY KEY,
-            category_name VARCHAR CHECK(type IN ('Food', 'Drink', 'Dessert')),
+            category_name VARCHAR CHECK(category_name IN ('Food', 'Drink', 'Dessert'))
             )
             """
         )
@@ -127,14 +128,25 @@ def create_table():
 
         cursor.execute(
             """
+        CREATE TABLE IF NOT EXISTS wallets
+        (
+        wallet_id SERIAL PRIMARY KEY,
+        user_id INT UNIQUE REFERENCES users(id),
+        balance INT DEFAULT 0
+        )
+        """
+        )
+
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS transaction
             (
             transaction_id SERIAL PRIMARY KEY,
             user_id INT,
             type VARCHAR CHECK(type IN ('deposit', 'withdrawal')),
-            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            quantity INT,
+            amount INT,
             status VARCHAR,
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id)
             )
             """

@@ -32,7 +32,7 @@ def add_user(
 
     cursor.execute(
         """
-        INSERT INTO users (name, email)
+        INSERT INTO users (fisrt, email)
         VALUES (%s, %s)
         RETURNING *
         """,

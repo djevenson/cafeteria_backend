@@ -28,7 +28,7 @@ def place_order(user_id:int=Form(...)):
         "statut":order[3],
     }
 
-@router.put("orders/{order_id}")
+@router.put("/orders/{order_id}")
 def valide_order(order_id:int,):
     connection=get_connection()
     cursor=connection.cursor()
@@ -82,7 +82,7 @@ def show_orders():
 
     return orders
 
-@router.get("/orders/{users_id}")
+@router.get("/orders/{user_id}")
 def show_orders(user_id,):
     connection=get_connection()
     cursor=connection.cursor()

@@ -117,6 +117,28 @@ def get_product(product_id:int):
 
     return product
 
+@router.get("/products/category/{category}")
+def category_product(
+    category_id:int,
+
+):
+    connection = get_connection()
+    cursor= connection.cursor()
+    cursor.execute(
+        """
+        SELECT * FROM products 
+        WHERE category_id=%s
+        """, (category_id,)
+    )
+
+    
+    products = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return products
+
+
 @router.get("/search/products")
 def search_produits(q:str):
     connection = get_connection()
