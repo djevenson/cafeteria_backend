@@ -16,10 +16,10 @@ def create_table():
             CREATE TABLE IF NOT EXISTS users
             (                                                                              
             id SERIAL PRIMARY KEY,
-            last name VARCHAR(100),
-            first name VARCHAR(100),
+            first_name VARCHAR(100),
+            last_name VARCHAR(100),
             email VARCHAR(100) UNIQUE,
-            role VARCHAR(25) DEFAULT 'user'
+            role VARCHAR(25) DEFAULT 'client'
             )
             """
         )
@@ -29,7 +29,7 @@ def create_table():
             CREATE TABLE IF NOT EXISTS categories
             (
             category_id SERIAL PRIMARY KEY,
-            category_name VARCHAR(50) UNIQUE
+            category_name VARCHAR CHECK(type IN ('Food', 'Drink', 'Dessert'))
             )
             """
         )
@@ -42,12 +42,12 @@ def create_table():
             product_id SERIAL PRIMARY KEY,
             category_id INT,
             name VARCHAR(100) UNIQUE,
-            price INT DEFAULT 0,
+            price INT,
             stock INT DEFAULT 0,
             description VARCHAR,
             status INT,
             photo_url TEXT,
-            datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP, #DONNE HEURE ET DATE
+            datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
             FOREIGN KEY (category_id) REFERENCES categories(category_id)
             )
             """
@@ -66,6 +66,34 @@ def create_table():
             """
         )
         
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS carts
+            (
+            cart_id SERIAL PRIMARY KEY,
+            user_id INT,
+            creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expiration TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '24 hours',
+            FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+            """
+        )
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS carts_items
+            (
+            cart_id SERIAL PRIMARY KEY,
+            product_id INT,
+            quantity INT,
+            price INT,
+            total INT,
+            FOREIGN KEY (cart_id) REFERENCES carts(cart_id),
+            FOREIGN KEY (product_id) REFERENCES products(product_id) 
+            )
+            """
+        )
+
 
         cursor.execute(
             """
@@ -84,27 +112,13 @@ def create_table():
 
         cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS carts
-            (
-            cart_id SERIAL PRIMARY KEY,
-            user_id INT,
-            creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            expiration TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '24 hours',
-            FOREIGN KEY (user_id) REFERENCES user(id)
-            )
-            """
-        )
-
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS carts_items
-            (
-            cart_id SERIAL PRIMARY KEY,
-            product_id INT,
-            quantity INT,
-            price INT,
-            FOREIGN KEY (cart_id, product_id ) REFERENCES cart(id), product(id)
-            )
+            INSERT INTO status (status_name) 
+            VALUES
+            (1, 'En cours')
+            (2, 'Validé')
+            (3, 'Livré')
+            (4, 'Payé')
+            ON CONFFLICT status_name DO NOTHING;
             """
         )
 
@@ -118,7 +132,7 @@ def create_table():
             quantity INT,
             total_price INT,
             unit_price INT,
-            FOREIGN KEY (order_id) REFERENCES order(id)
+            FOREIGN KEY (order_id) REFERENCES orders(order_id)
             )
             """
         )
@@ -132,8 +146,8 @@ def create_table():
             type VARCHAR CHECK(type IN ('deposit', 'withdrawal')),
             date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             quantity INT,
-            status VARCHAR
-            FOREIGN KEY (user_id) REFERENCES user(id)
+            status VARCHAR,
+            FOREIGN KEY (user_id) REFERENCES users(id)
             )
             """
         )

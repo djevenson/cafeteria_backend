@@ -4,7 +4,7 @@ from app.database import get_connection
 router=APIRouter()
 
 @router.post("/carts_products")
-def add_product_in_carts_products(cart_id:int, product_id:int, quantity:int):
+def add_product_in_carts(cart_id:int, product_id:int, quantity:int):
     connection=get_connection()
     cursor=connection.cursor()
 
@@ -14,17 +14,17 @@ def add_product_in_carts_products(cart_id:int, product_id:int, quantity:int):
         """
         (product_id,)
     )
-    product = cursor.fetchone
+    product = cursor.fetchone()
 
     if product[0] ==0:
         return {"error" : "This product is done"}
     
     if quantity > product[0]:
-        return {"error" : "This product is unsufficient, there are only {product[0]} as rest"}
+        return {"error" : "This product is unsufficient, there are only {product[0]} left"}
     
     stock_info = None
     if product[0] <= 5:
-        stock_info = f"There are more than {product[0]} available"  
+        stock_info = f"There are only {product[0]} available"  
 
     cursor.execute(
         """
@@ -40,20 +40,40 @@ def add_product_in_carts_products(cart_id:int, product_id:int, quantity:int):
 
     return {
         "message":"Product added successfully",
-        "stock_warning" : "stock_info"
+        "stock_warning" : stock_info
     }
 
 @router.put("/carts_products")
-def modify_quantity_in_carts_product(product_id:int, quantity:int,):
+def modify_quantity_in_cart(cart_id:int, product_id:int, quantity:int,):
     connection=get_connection()
     cursor=connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT stock FROM products WHERE product_id = %s
+        """
+        (product_id,)
+    )
+
+    product = cursor.fetchone()
+
+    if product[0] ==0:
+        return {"error" : "This product is done"}
+    
+    if quantity > product[0]:
+        return {"error" : "This product is unsufficient, there are only {product[0]} left"}
+    
+    stock_info = None
+    if product[0] <= 5:
+        stock_info = f"There are only {product[0]} available"  
+
     cursor.execute(
         """
         UPDATE carts_products
         SET quantity = %s
-        WHERE product_id = %s
+        WHERE cart_id = %s AND product_id = %s
         """,
-        (product_id, quantity,)
+        (quantity, cart_id, product_id)
     ) 
     
     connection.commit()
@@ -62,12 +82,13 @@ def modify_quantity_in_carts_product(product_id:int, quantity:int,):
 
     return {
         "message":"quantity has been modified",
-        "quantity":"quantity"
+        "quantity":quantity,
+        "stock_warning":stock_info
 
     }
 
 @router.put("/carts_products/change product")
-def modify_product_in_carts_product(cart_id:int, old_product_id:int, new_product_id:int):
+def modify_product_in_cart(cart_id:int, old_product_id:int, new_product_id:int):
     connection=get_connection()
     cursor=connection.cursor()
     cursor.execute(
@@ -76,7 +97,7 @@ def modify_product_in_carts_product(cart_id:int, old_product_id:int, new_product
         SET product_id = %s
         WHERE cart_id = %s AND product_id =%s
         """,
-        (cart_id, old_product_id, new_product_id,)
+        (new_product_id, cart_id, old_product_id)
     ) 
     
     connection.commit()
@@ -88,7 +109,7 @@ def modify_product_in_carts_product(cart_id:int, old_product_id:int, new_product
         }
 
 @router.delete("/carts_products/{product_id}")
-def delete_product_in_carts_product(product_id:int,):
+def delete_product_in_cart(product_id:int,):
     connection=get_connection()
     cursor=connection.cursor()
     cursor.execute(
@@ -106,7 +127,7 @@ def delete_product_in_carts_product(product_id:int,):
     cursor=connection.cursor()
     cursor.execute(
         """
-        DELETE * FROM carts_products WHERE product_id=%s
+        DELETE FROM carts_products WHERE product_id=%s
         """,
         (product_id,)
     )
