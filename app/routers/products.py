@@ -95,6 +95,69 @@ def get_products():
 
     return products
 
+@router.put("/product /{product_id}/add_stock")
+def add_stock (product_id:int, quantity:int=Form(...)):
+    connection=get_connection()
+    cursor=connection.cursor()
+    cursor.execute(
+        """
+        UPDATE products
+        SET stock = stock + %s
+        WHERE product_id = %s
+        """,
+        (quantity, product_id,)
+    )
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return {
+        "message":"stock added successfully"
+    }
+
+@router.put("/product /{product_id}/modify_stock")
+def modify_stock (product_id:int, quantity:int=Form(...)):
+    connection=get_connection()
+    cursor=connection.cursor()
+    cursor.execute(
+        """
+        UPDATE products
+        SET stock = %s
+        WHERE product_id = %s
+        """,
+        (quantity, product_id,)
+    )
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return {
+        "message":"Stock modified successfully"
+    }
+
+@router.get("/products/{product_id}/stock")
+def  get_stock(product_id):
+    connection=get_connection()
+    cursor=connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT * FROM stock WHERE product_id = %s
+        """,
+        (product_id,)
+    )
+    product =cursor.fetchone()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found!!")
+    cursor.close()
+    connection.close()
+
+    return {
+        "message":f"There are {product[0]} units left in this product"
+    } 
+
+
+
 
 #====ENDPOINT TO GET ON PRODUCT WITHM ID======#
 @router.get("/products/{product_id}")
@@ -104,7 +167,7 @@ def get_product(product_id:int):
 
     cursor.execute(
         """
-        SELECT * FROM products WHERE id=%s
+        SELECT * FROM products WHERE product_id=%s
         """,
         (product_id,)
     )
@@ -212,7 +275,7 @@ async def edit_product(
 
 @router.delete("/products/{product_id}")
 def del_product(
-    product_id:int#=Form(...)
+    product_id:int
 ):
     connection=get_connection()
     cursor=connection.cursor()

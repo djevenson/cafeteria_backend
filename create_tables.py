@@ -15,7 +15,7 @@ def create_table():
             """
             CREATE TABLE IF NOT EXISTS users
             (                                                                              
-            id SERIAL PRIMARY KEY,
+            id GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
             first_name VARCHAR(100),
             last_name VARCHAR(100),
             email VARCHAR(100) UNIQUE,
@@ -28,8 +28,8 @@ def create_table():
             """
             CREATE TABLE IF NOT EXISTS categories
             (
-            category_id SERIAL PRIMARY KEY,
-            category_name VARCHAR CHECK(type IN ('Food', 'Drink', 'Dessert'))
+            category_id GENERATED ALWAYS AS IDENTITY PRIMARY KEY ,
+            category_name VARCHAR(100)
             )
             """
         )
@@ -39,12 +39,12 @@ def create_table():
             """
             CREATE TABLE IF NOT EXISTS products
             (
-            product_id SERIAL PRIMARY KEY,
+            product_id GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
             category_id INT,
             name VARCHAR(100) UNIQUE,
             price INT,
             stock INT DEFAULT 0,
-            description VARCHAR,
+            description TEXT,
             status INT,
             photo_url TEXT,
             datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
@@ -57,7 +57,7 @@ def create_table():
             """
             CREATE TABLE IF NOT EXISTS favorites
             (
-            favorite_id SERIAL PRIMARY KEY,
+            favorite_id GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
             user_id INT,
             product_id INT,
             FOREIGN KEY (user_id) REFERENCES users(id),
@@ -70,8 +70,9 @@ def create_table():
             """
             CREATE TABLE IF NOT EXISTS carts
             (
-            cart_id SERIAL PRIMARY KEY,
+            cart_id GENERATED ALWAYS AS IDENTITY PRIMARY KEY ,
             user_id INT,
+            total_amount INT DEFAULT 0,
             creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             expiration TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '24 hours',
             FOREIGN KEY (user_id) REFERENCES users(id)
@@ -81,9 +82,9 @@ def create_table():
 
         cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS carts_items
+            CREATE TABLE IF NOT EXISTS cart_products
             (
-            cart_id SERIAL PRIMARY KEY,
+            cart_id INT,
             product_id INT,
             quantity INT,
             price INT,
@@ -99,12 +100,12 @@ def create_table():
             """
             CREATE TABLE IF NOT EXISTS orders
             (
-            order_id SERIAL PRIMARY KEY,
+            order_id GENERATED ALWAYS AS IDENTITY PRIMARY KEY ,
             user_id INT,
-            total_price INT DEFAULT 0,
-            creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            expiration TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '3 hours',
+            total_amount INT DEFAULT 0,
             status INT DEFAULT 1,
+            creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expiration TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '24 hours',
             FOREIGN KEY (user_id) REFERENCES users(id)
             )
             """
@@ -115,21 +116,22 @@ def create_table():
             """
             CREATE TABLE IF NOT EXISTS order_products
             (
-            product_id SERIAL PRIMARY KEY,
             order_id INT,
+            product_id INT,
             quantity INT,
-            total_price INT,
-            unit_price INT,
-            FOREIGN KEY (order_id) REFERENCES orders(order_id)
+            price INT,
+            total INT,
+            FOREIGN KEY (order_id) REFERENCES orders(order_id),
+            FOREIGN KEY (product_id) REFERENCES products(product_id)
             )
             """
         )
 
         cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS transaction
+            CREATE TABLE IF NOT EXISTS transactions
             (
-            transaction_id SERIAL PRIMARY KEY,
+            transaction_id GENERATED ALWAYS AS IDENTITY PRIMARY KEY ,
             user_id INT,
             type VARCHAR CHECK(type IN ('deposit', 'withdrawal')),
             date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -139,6 +141,16 @@ def create_table():
             )
             """
         )
+
+        cursor.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id)
+            """
+        )
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email))")   
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(category_name)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_products_name ON products(name)")
+         
 
         connection.commit()
         print('Tables created successfully!!')

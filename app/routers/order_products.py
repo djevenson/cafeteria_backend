@@ -4,34 +4,34 @@ from datetime import date
 
 router = APIRouter()
 
-@router.post("/order_products")
-def order_products(
-    order_id:int=Form(...),
-    product_id:int=Form(...),
-    quantity:int=Form(...),
-    price:int=Form(...),
-    delay:date=Form(...)
 
-):
-    connection = get_connection()
+@router.get("/order_products/{order_id}")
+def show_order_products(order_id:int):
+    connection=get_connection()
     cursor=connection.cursor()
+
     cursor.execute(
         """
-        INSERT INTO order_products (order_id, product_id, quantity, price, delay) VALUES (%s, %s, %s, %s, %s) RETURNING *
-        """, 
-        (order_id, product_id, quantity, price, delay)
+        SELECT * FROM order_products WHERE order_id=%s
+        """,
+        (order_id,)
     )
 
-    order_products = cursor.fetchone()
-    connection.commit()
+    order_products=cursor.fetchall()
+    if not order_products:
+        connection.rollback()
+        raise HTTPException(status_code=404, detail="No product have been added yet!!")
     cursor.close()
     connection.close()
 
-    return{
-        "message":"Tout bgy sou control",
-        "order_id": order_products[0],
-        "product_id":order_products[1],
-        "quantity":order_products[2],
-        "price":order_products[3],
-        "delay":order_products[4]
+    return {"message":"orders products details",
+            "details":[
+                {       
+                "order_id": order_product[0],
+                "product_id":order_product[1],
+                "quantity":order_product[2],
+                "price":order_product[3],
+                "delay":order_product[4]      
+                }for order_product in order_products
+            ]
     }
