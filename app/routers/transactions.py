@@ -37,7 +37,7 @@ def deposit(
 
         RETURNING *
         """,
-        (user_id, amount,)
+        (user_id, "deposit", amount, "Validé")
     )
 
     transaction = cursor.fetchone()
@@ -108,7 +108,7 @@ def withdraw(
 
         RETURNING *
         """,
-        (user_id, "withdraw", amount, "success")
+        (user_id, "withdrawal", amount, "Validé")
     )
 
     transaction = cursor.fetchone()
@@ -146,7 +146,7 @@ def get_transactions(user_id: int):
         """
         SELECT * FROM transactions
         WHERE user_id=%s
-        ORDER BY created_at DESC
+        ORDER BY date DESC
         """,
         (user_id,)
     )

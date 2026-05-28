@@ -16,8 +16,8 @@ def create_table():
             CREATE TABLE IF NOT EXISTS users
             (                                                                              
             id SERIAL PRIMARY KEY,
-            last_name VARCHAR(100),
             first_name VARCHAR(100),
+            last_name VARCHAR(100),
             email VARCHAR(100) UNIQUE,
             balance INT,
             role VARCHAR(25) DEFAULT 'client'
@@ -111,6 +111,7 @@ def create_table():
             """
         )
 
+     
 
         cursor.execute(
             """
@@ -128,9 +129,9 @@ def create_table():
 
         cursor.execute(
             """
-        CREATE TABLE IF NOT EXISTS wallets
+        CREATE TABLE IF NOT EXISTS balance
         (
-        wallet_id SERIAL PRIMARY KEY,
+        balance_id SERIAL PRIMARY KEY,
         user_id INT UNIQUE REFERENCES users(id),
         balance INT DEFAULT 0
         )
@@ -139,7 +140,7 @@ def create_table():
 
         cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS transaction
+            CREATE TABLE IF NOT EXISTS transactions
             (
             transaction_id SERIAL PRIMARY KEY,
             user_id INT,

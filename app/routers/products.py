@@ -9,7 +9,6 @@ UPLOAD_DIR="uploads"
 os.makedirs(UPLOAD_DIR,exist_ok=True)
 
 
-#====ENDPOINT TO ADD A PRODUCT======#
 @router.post("/products")
 async def add_products(
     name:str=Form(...),
@@ -74,7 +73,6 @@ async def add_products(
 
 
 
-#====ENDPOINT SHOW ALL PRODUCTS======#
 @router.get("/products")
 def get_products():
     connection=get_connection()
@@ -94,6 +92,69 @@ def get_products():
     connection.close()
 
     return products
+
+@router.put("/product /{product_id}/add_stock")
+def add_stock (product_id:int, quantity:int=Form(...)):
+    connection=get_connection()
+    cursor=connection.cursor()
+    cursor.execute(
+        """
+        UPDATE products
+        SET stock = stock + %s
+        WHERE product_id = %s
+        """,
+        (quantity, product_id,)
+    )
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return {
+        "message":"stock added successfully"
+    }
+
+@router.put("/product /{product_id}/modify_stock")
+def modify_stock (product_id:int, quantity:int=Form(...)):
+    connection=get_connection()
+    cursor=connection.cursor()
+    cursor.execute(
+        """
+        UPDATE products
+        SET stock = %s
+        WHERE product_id = %s
+        """,
+        (quantity, product_id,)
+    )
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return {
+        "message":"Stock modified successfully"
+    }
+
+@router.get("/products/{product_id}/stock")
+def  get_stock(product_id:int):
+    connection=get_connection()
+    cursor=connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT * FROM stock WHERE product_id = %s
+        """,
+        (product_id,)
+    )
+    product =cursor.fetchone()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found!!")
+    cursor.close()
+    connection.close()
+
+    return {
+        "message":f"There are {product[0]} units left in this product"
+    } 
+
+
 
 
 #====ENDPOINT TO GET ON PRODUCT WITHM ID======#
@@ -177,14 +238,14 @@ async def edit_product(
         (product_id,)
     )
 
-    existing = cursor.fetchone()  # ← stocker ici
+    existing = cursor.fetchone()
 
     if not existing:
         cursor.close()
         connection.close()
         raise HTTPException(status_code=404, detail="Product not found!!")
 
-    # Fusion ancienne/nouvelle valeur
+   
     new_category_id = category_id if category_id is not None else existing[1]
     new_name        = name        if name        is not None else existing[2]
     new_price       = price       if price       is not None else existing[3]
@@ -192,7 +253,7 @@ async def edit_product(
     new_description = description if description is not None else existing[5]
     old_photo_url   = existing[6]
 
-    # Nouvelle photo seulement si envoyée
+
     if photo and photo.filename != "":
         ext=photo.filename.rsplit(".",1)[-1]
         new_photo_name=f"{uuid.uuid4()}.{ext}"
@@ -203,7 +264,7 @@ async def edit_product(
             os.remove(old_photo_url)
 
 
-    # Vérification nom unique seulement si changé
+
     if new_name != existing[2]:
         cursor.execute(
             "SELECT 1 FROM products WHERE name=%s AND product_id != %s",
@@ -234,7 +295,7 @@ async def edit_product(
 
 @router.delete("/products/{product_id}")
 def del_product(
-    product_id:int#=Form(...)
+    product_id:int
 ):
     connection=get_connection()
     cursor=connection.cursor()

@@ -38,7 +38,7 @@ def add_to_favoris(
     
 
 @router.get("/favoris/{user_id}")
-def get_favoris(user_id,):
+def get_favoris(user_id:int):
     connection=get_connection()
     cursor=connection.cursor()
     cursor.execute(
@@ -59,9 +59,7 @@ def get_favoris(user_id,):
 
 
 @router.delete("/favoris")
-def delete_favoris(
-    user_id,product_id
-): 
+def delete_favoris(user_id:int, product_id:int): 
     connection=get_connection()
     cursor=connection.cursor()
     cursor.execute(

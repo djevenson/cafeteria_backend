@@ -28,39 +28,26 @@ def place_order(user_id:int=Form(...)):
         "statut":order[3],
     }
 
-@router.put("/orders/{order_id}")
-def valide_order(order_id:int,):
+@router.put("/orders/{order_id}/status")
+def modify_order_status(order_id:int, status_id:int):
     connection=get_connection()
     cursor=connection.cursor()
-    cursor.execute(
-        """
-        SELECT * FROM carts WHERE order_id=%s
-        """,
-        (order_id,)
-    )
-    cart_item=cursor.fetchall()
-    cursor.execute(
-        """
-        SELECT total_price FROM carts WHERE order_id=%s
-        """,
-        (order_id,)
-    )
-    total_price=cursor.fetchall()
-    total_price=sum(total_price)
-    for item in cart_item:
-        cursor.execute(
-            """
-            INSERT INTO order_products ()
-            """
-        )
     
-    #cursor.execute(
-        #"""
-        #UPDATE orders
-        #SET status = %s
-        #WHERE id = %s
-        #""",
-   # )
+    cursor.execute(
+        """
+        UPDATE orders
+        SET status = %s
+        WHERE order_id = %s
+        """,
+        (status_id, order_id)
+    )
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return {
+        "message":"Status modified successfully"
+    }
 
 
 
