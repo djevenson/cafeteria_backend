@@ -38,6 +38,8 @@ async def add_products(
         )
         
         if cursor.fetchone():
+            cursor.close()
+            connection.close()
             raise HTTPException(status_code=404, detail="Product name already exist !!")
     finally:
         cursor.close()
