@@ -31,7 +31,6 @@ def set_categories(cat_id:str):
         (cat_id,)
     )
     categorie=cursor.fetchone()
-    cursor.execute()
     cursor.close()
     connection.close()
 

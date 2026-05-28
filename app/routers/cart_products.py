@@ -4,7 +4,7 @@ from app.database import get_connection
 
 router=APIRouter()
 
-@router.post("/carts_products")
+@router.post("/cart_products")
 def add_product_in_carts(cart_id:int, product_id:int, quantity:int):
     connection=get_connection()
     cursor=connection.cursor()
@@ -12,7 +12,7 @@ def add_product_in_carts(cart_id:int, product_id:int, quantity:int):
     cursor.execute(
         """
         SELECT * FROM products WHERE product_id = %s
-        """
+        """,
         (product_id,)
     )
     product = cursor.fetchone()
@@ -20,9 +20,13 @@ def add_product_in_carts(cart_id:int, product_id:int, quantity:int):
     total_price = product_price * quantity
     product_stock = product[4]
     if product_stock ==0:
+        cursor.close()
+        connection.close()
         raise HTTPException(status_code=404, detail={"error" : "This product is done"})
     
     if quantity > product_stock:
+        cursor.close()
+        connection.close()
         raise HTTPException(status_code=400, detail={"error" : "This product is unsufficient, there are only {product_stock} left"})
     
     stock_info = None
@@ -31,7 +35,7 @@ def add_product_in_carts(cart_id:int, product_id:int, quantity:int):
 
     cursor.execute(
         """
-        INSERT INTO carts_products(cart_id, product_id, quantity, price, total)
+        INSERT INTO cart_products(cart_id, product_id, quantity, price, total)
         VALUES (%s, %s, %s, %s, %s) RETURNING *
         """,
         (cart_id, product_id, quantity, product_price, total_price)
@@ -59,6 +63,21 @@ def add_product_in_carts(cart_id:int, product_id:int, quantity:int):
     )
     connection.commit()
 
+    cursor.execute(
+        """
+        DELETE FROM cart_products WHERE cart_id=%s
+        """,
+        (cart_id,)
+    )
+    connection.commit()
+
+    cursor.execute(
+        """
+        DELETE FROM carts WHERE cart_id=%s
+        """,
+        (cart_id,)
+    )
+    connection.commit()
     cursor.close()
     connection.close()
 

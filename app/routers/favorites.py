@@ -3,8 +3,8 @@ from app.database import get_connection
 
 router=APIRouter()
 
-@router.post("/favoris")
-def add_to_favoris(
+@router.post("/favorites")
+def add_to_favorites(
     user_id:int=Form(...),
     product_id:int=Form(...)
 ):
@@ -12,18 +12,18 @@ def add_to_favoris(
     cursor=connection.cursor()
     cursor.execute(
         """
-        SELECT * FROM favoris WHERE user_id=%s AND product_id=%s 
+        SELECT * FROM favorites WHERE user_id=%s AND product_id=%s 
         """,
         (user_id,product_id)
     )
     if cursor.fetchone():
         cursor.close()
         connection.close()
-        raise HTTPException(status_code=409,detail= "product already in favoris !!")
+        raise HTTPException(status_code=409,detail= "product already in favorites !!")
     
     cursor.execute(
         """
-        INSERT INTO favoris (user_id, product_id)
+        INSERT INTO favorites (user_id, product_id)
         VALUES (%s, %s)
         """,
         (user_id, product_id)
@@ -33,38 +33,38 @@ def add_to_favoris(
     connection.close()
 
     return {
-        "message":f"user {user_id} added product {product_id} to favoris successfully!!!"
+        "message":f"user {user_id} added product {product_id} to favorites successfully!!!"
     }
     
 
-@router.get("/favoris/{user_id}")
-def get_favoris(user_id:int):
+@router.get("/favorites/{user_id}")
+def get_favorites(user_id:int):
     connection=get_connection()
     cursor=connection.cursor()
     cursor.execute(
         """
-        SELECT product_id FROM favoris WHERE user_id=%s   
+        SELECT product_id FROM favorites WHERE user_id=%s   
         """,
         (user_id)
     )
     favoris=cursor.fetchall()
     if not favoris:
-        raise HTTPException(status_code=404, detail="Any products in favoris")
+        raise HTTPException(status_code=404, detail="Any products in favorites")
     cursor.close()
     connection.close()
     return {
-        "message":"here are your favoris",
+        "message":"here are your favorites",
         "favoris":favoris
     }
 
 
-@router.delete("/favoris")
-def delete_favoris(user_id:int, product_id:int): 
+@router.delete("/favorites")
+def delete_favorites(user_id:int, product_id:int): 
     connection=get_connection()
     cursor=connection.cursor()
     cursor.execute(
         """
-        SELECT * FROM favoris WHERE user_id=%s AND product_id=%s 
+        SELECT * FROM favorites WHERE user_id=%s AND product_id=%s 
         """,
         (user_id,product_id)
     )
@@ -75,7 +75,7 @@ def delete_favoris(user_id:int, product_id:int):
     
     cursor.execute(
         """
-        DELETE FROM favoris WHERE user_id=%s AND product_id=%s 
+        DELETE FROM favorites WHERE user_id=%s AND product_id=%s 
         """,
         (user_id,product_id)
     )
@@ -84,6 +84,6 @@ def delete_favoris(user_id:int, product_id:int):
     connection.close()
 
     return {
-        "message":"product out of your favoris"
+        "message":"product out of your favorites"
     }
     

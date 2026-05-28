@@ -4,13 +4,14 @@ from app.database import get_connection
 router=APIRouter()
 
 @router.post("/carts")
-def create_cart(user_id:int, ):
+def create_cart(user_id:int,):
     connection=get_connection()
     cursor=connection.cursor()
     cursor.execute(
         """
-        SELECT * FROM users WHERE user_id=%s
-        """
+        SELECT * FROM users WHERE id=%s
+        """, 
+        (user_id,)
     )
     user=cursor.fetchone()
     if not user:
@@ -23,10 +24,10 @@ def create_cart(user_id:int, ):
         INSERT INTO carts(user_id)
         VALUES (%s) RETURNING *
         """,
-        (user_id)
+        (user_id,)
     )
-    connection.commit()
     cart=cursor.fetchone()
+    connection.commit() 
     cursor.close()
     connection.close()
 
