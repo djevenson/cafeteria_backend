@@ -91,6 +91,26 @@ def  get_users(user_id:int):
 
     return user
 
+@router.get("/users/search/q")
+def search_produits(q:str):
+    connection = get_connection()
+    cursor=connection.cursor()
+    cursor.execute(
+        """
+        SELECT * FROM users WHERE first_name ILIKE %s
+        """,
+        (f"%{q}%",)
+    )
+    result=cursor.fetchall()
+    if not result:
+        cursor.close()
+        connection.close()
+        raise HTTPException(status_code=404, detail="user not found")
+    cursor.close()
+    connection.close()
+
+    return result
+
 @router.put("/users/profil/{user_id}")
 def edit_role(
     user_id:int,
