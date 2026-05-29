@@ -19,6 +19,7 @@ def create_table():
             first_name VARCHAR(100),
             last_name VARCHAR(100),
             email VARCHAR(100) UNIQUE,
+            balance INT,
             role VARCHAR(25) DEFAULT 'client'
             )
             """
@@ -47,7 +48,7 @@ def create_table():
             description TEXT,
             photo_url TEXT,
             datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-            FOREIGN KEY (category_id) REFERENCES categories(category_id)
+            FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE SET NULL
             )
             """
         )
@@ -60,7 +61,7 @@ def create_table():
             user_id INT,
             product_id INT,
             FOREIGN KEY (user_id) REFERENCES users(id),
-            FOREIGN KEY (product_id) REFERENCES products(product_id) 
+            FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE SET NULL
             ) 
             """
         )
@@ -74,7 +75,7 @@ def create_table():
             total_amount INT DEFAULT 0,
             creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             expiration TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '24 hours',
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
             )
             """
         )
@@ -88,8 +89,8 @@ def create_table():
             quantity INT,
             price INT,
             total INT,
-            FOREIGN KEY (cart_id) REFERENCES carts(cart_id),
-            FOREIGN KEY (product_id) REFERENCES products(product_id) 
+            FOREIGN KEY (cart_id) REFERENCES carts(cart_id) ON DELETE SET NULL,
+            FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE SET NULL
             )
             """
         )
@@ -105,7 +106,7 @@ def create_table():
             status INT DEFAULT 1,
             creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             expiration TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '24 hours',
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
             )
             """
         )
@@ -120,10 +121,21 @@ def create_table():
             quantity INT,
             price INT,
             total INT,
-            FOREIGN KEY (order_id) REFERENCES orders(order_id),
-            FOREIGN KEY (product_id) REFERENCES products(product_id)
+            FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE SET NULL,
+            FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE SET NULL
             )
             """
+        )
+
+        cursor.execute(
+            """
+        CREATE TABLE IF NOT EXISTS balance
+        (
+        balance_id SERIAL PRIMARY KEY,
+        user_id INT UNIQUE REFERENCES users(id) ON DELETE SET NULL,
+        balance INT DEFAULT 0
+        )
+        """
         )
 
         cursor.execute(
@@ -133,10 +145,10 @@ def create_table():
             transaction_id SERIAL PRIMARY KEY ,
             user_id INT,
             type VARCHAR CHECK(type IN ('deposit', 'withdrawal')),
-            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            quantity INT,
+            amount INT,
             status VARCHAR,
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)ON DELETE SET NULL
             )
             """
         )

@@ -7,7 +7,8 @@ router=APIRouter()
 def add_user(
     first_name:str=Form(...),
     last_name:str=Form(...),
-    email:str=Form(...)
+    email:str=Form(...),
+    balance:int=Form(...)
 ):
     connection=get_connection()
     cursor=connection.cursor()
@@ -33,11 +34,11 @@ def add_user(
 
     cursor.execute(
         """
-        INSERT INTO users (first_name, last_name, email)
-        VALUES (%s, %s, %s)
+        INSERT INTO users (first_name, last_name, email, balance)
+        VALUES (%s, %s, %s, %s)
         RETURNING *
         """,
-        (first_name, last_name, email)
+        (first_name, last_name, email, balance)
     )
 
     user=cursor.fetchone()
@@ -51,7 +52,8 @@ def add_user(
         "user_id":user_id,
         "first_name":first_name,
         "last_name":last_name,
-        "email":email
+        "email":email,
+        "balance": balance
     }
 
 

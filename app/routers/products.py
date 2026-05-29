@@ -10,7 +10,6 @@ UPLOAD_DIR="uploads"
 os.makedirs(UPLOAD_DIR,exist_ok=True)
 
 
-#====ENDPOINT TO ADD A PRODUCT======#
 @router.post("/products")
 async def add_products(
     name:str=Form(...),
@@ -77,7 +76,6 @@ async def add_products(
 
 
 
-#====ENDPOINT SHOW ALL PRODUCTS======#
 @router.get("/products")
 def get_products():
     connection=get_connection()
@@ -96,28 +94,42 @@ def get_products():
     cursor.close()
     connection.close()
 
-    return products
-
+    return {
+        "message":f"Search results for 'All products'",
+        "results":[
+            {
+                "product_id": product[0],
+                "category_id": product[1],
+                "name": product[2],
+                "price": product[3],
+                "stock": product[4],
+                "description": product[5],
+                "photo_url": product[6]
+            } for product in products
+        ]
+    }
 
 @router.get("/products/{product_id}/stock")
-def  get_stock(product_id):
+def  get_stock(product_id:int):
     connection=get_connection()
     cursor=connection.cursor()
 
     cursor.execute(
         """
-        SELECT * FROM stock WHERE product_id = %s
+        SELECT stock FROM products WHERE product_id = %s
         """,
         (product_id,)
     )
-    product =cursor.fetchone()
-    if not product:
+    stock =cursor.fetchone()[0]
+    if not stock:
+        cursor.close()
+        connection.close()
         raise HTTPException(status_code=404, detail="Product not found!!")
     cursor.close()
     connection.close()
 
     return {
-        "message":f"There are {product[0]} units left in this product"
+        "message":f"There are {stock} units left in this product"
     } 
 
 
@@ -143,6 +155,52 @@ def get_product(product_id:int):
     return {"message":"product details",
             "details":[
                 {
+                "product_id": products[0],
+                "category_id": products[1],
+                "name": products[2],
+                "price": products[3],
+                "stock": products[4],
+                "description": products[5],
+                "photo_url": products[6]
+            } 
+        ]
+    }
+
+
+@router.get("/products/category/{category}")
+def category_product(
+    category_id:int,
+
+):
+    connection = get_connection()
+    cursor= connection.cursor()
+    
+    cursor.execute(
+        """
+        SELECT category_name FROM categories WHERE category_id=%s
+        """, (category_id,)
+    )
+    category_name = cursor.fetchone()[0]
+
+    if not category_name:
+        cursor.close()
+        connection.close()
+        raise HTTPException(status_code=404, detail="Category not found!!")
+
+    cursor.execute(
+        """
+        SELECT * FROM products 
+        WHERE category_id=%s
+        """, (category_id,)
+    )
+    products = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return {
+        "message":f"Search results for '{category_name}' category",
+        "results":[
+            {
                 "product_id": product[0],
                 "category_id": product[1],
                 "name": product[2],
@@ -151,7 +209,7 @@ def get_product(product_id:int):
                 "description": product[5],
                 "photo_url": product[6]
             } for product in products
-            ]
+        ]
     }
 
 
@@ -248,14 +306,14 @@ async def edit_product(
         (product_id,)
     )
 
-    existing = cursor.fetchone()  # ← stocker ici
+    existing = cursor.fetchone()
 
     if not existing:
         cursor.close()
         connection.close()
         raise HTTPException(status_code=404, detail="Product not found!!")
 
-    # Fusion ancienne/nouvelle valeur
+   
     new_category_id = category_id if category_id is not None else existing[1]
     new_name        = name        if name        is not None else existing[2]
     new_price       = price       if price       is not None else existing[3]
@@ -263,7 +321,7 @@ async def edit_product(
     new_description = description if description is not None else existing[5]
     old_photo_url   = existing[6]
 
-    # Nouvelle photo seulement si envoyée
+    new_photo_url = ""
     if photo and photo.filename != "":
         ext=photo.filename.rsplit(".",1)[-1]
         new_photo_name=f"{uuid.uuid4()}.{ext}"
@@ -274,7 +332,7 @@ async def edit_product(
             os.remove(old_photo_url)
 
 
-    # Vérification nom unique seulement si changé
+
     if new_name != existing[2]:
         cursor.execute(
             "SELECT 1 FROM products WHERE name=%s AND product_id != %s",

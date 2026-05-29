@@ -88,5 +88,5 @@ def delete_cart(cart_id:int,):
     cursor.close()
     connection.close()
 
-    return {"message":"carts deleted"}
+    return {"message":"carts ready for your products"}
 
